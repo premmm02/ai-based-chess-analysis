@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: chess-analysis
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4
+    healthCheckPath: /health
+    envVars:
+      - key: CHESS_DATABASE_PATH
+        value: /var/data/chessanalysis.db
+      - key: PYTHON_VERSION
+        value: 3.12.8
+    disk:
+      name: chess-analysis-data
+      mountPath: /var/data
+      sizeGB: 1
