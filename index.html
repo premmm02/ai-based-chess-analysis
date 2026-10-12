@@ -1,0 +1,566 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chess Analysis</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Chess.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+
+<body>
+
+<!-- ACCOUNT LOGIN / REGISTRATION -->
+<section id="auth-screen" class="account-screen">
+  <div class="auth-card">
+    <div class="auth-brand"><span>♟</span><div><h1>Chess Analysis</h1><p>Your personal chess training space</p></div></div>
+    <div class="auth-tabs"><button id="auth-login-tab" class="auth-tab active" type="button">Log in</button><button id="auth-register-tab" class="auth-tab" type="button">Create account</button></div>
+    <form id="auth-form">
+      <label for="auth-username">Username</label><input id="auth-username" name="username" autocomplete="username" minlength="3" maxlength="24" required placeholder="Choose a username">
+      <label for="auth-password">Password</label><input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters">
+      <button id="auth-submit" class="btn btn-primary auth-submit" type="submit">Log in</button>
+      <p id="auth-message" class="auth-message" role="status"></p>
+    </form>
+    <p class="auth-footnote">Your games and progress are saved to your account.</p>
+  </div>
+</section>
+
+<!-- HOME / MAIN MENU -->
+<section id="home-screen" class="portal-screen" hidden>
+  <header class="portal-header"><div class="portal-brand"><span>♟</span> Chess Analysis</div><div class="portal-user"><span id="portal-welcome">Welcome</span><button id="logout-button" class="btn btn-secondary" type="button">Log out</button></div></header>
+  <main class="portal-main">
+    <div class="portal-intro"><p class="eyebrow">YOUR TRAINING SPACE</p><h1>Play. Review. Improve.</h1><p>Your personal space to practice, review games, and track progress.</p></div>
+<div class="portal-options">
+      <button id="practice-card" class="portal-option portal-practice" type="button"><span class="portal-option-icon">♟</span><span class="portal-option-title">Practice</span><span class="portal-option-desc">Practice your game against a built-in chess AI.</span><span class="portal-option-cta">Start a game <b>→</b></span></button>
+      <button id="history-card" class="portal-option" type="button"><span class="portal-option-icon">◷</span><span class="portal-option-title">History</span><span class="portal-option-desc">Open your saved games and review past moves.</span><span class="portal-option-cta">View games <b>→</b></span></button>
+      <button id="dashboard-card" class="portal-option" type="button"><span class="portal-option-icon">▥</span><span class="portal-option-title">Player Dashboard</span><span class="portal-option-desc">Track your rating, results, and improvement over time.</span><span class="portal-option-cta">View progress <b>→</b></span></button>
+      <button id="online-card" class="portal-option portal-online" type="button"><span class="portal-option-icon">♞</span><span class="portal-option-title">Online Multiplayer</span><span class="portal-option-desc">Add friends by username, challenge them, and play live games online.</span><span class="portal-option-cta">Play online <b>→</b></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- PLAYER DASHBOARD -->
+<section id="player-dashboard" class="portal-screen" hidden>
+  <header class="portal-header"><button class="btn btn-secondary portal-back" data-go-home type="button">← Home</button><div class="portal-brand">Player Dashboard</div><div class="portal-user"><span id="dashboard-username"></span><button id="dashboard-logout" class="btn btn-secondary" type="button">Log out</button></div></header>
+  <main class="portal-main dashboard-main"><div class="portal-intro"><p class="eyebrow">YOUR PROGRESS</p><h1>Player Dashboard</h1><p>Stats are calculated from games saved to your account.</p></div>
+    <div class="dashboard-stat-grid"><article><span>Current rating</span><strong id="dash-rating">1200</strong><small id="dash-rating-change">Starting rating</small></article><article><span>Games played</span><strong id="dash-games">0</strong><small>All saved games</small></article><article><span>Win rate</span><strong id="dash-winrate">—</strong><small id="dash-record">0 wins · 0 draws · 0 losses</small></article><article><span>Current streak</span><strong id="dash-streak">0</strong><small>Consecutive results</small></article></div>
+    <div class="dashboard-panels"><article class="portal-panel"><div class="portal-panel-heading"><h2>Rating progress</h2><span>Game-by-game</span></div><div id="rating-chart" class="rating-chart"><p class="empty-state">Play your first game to start tracking your rating.</p></div></article><article class="portal-panel"><div class="portal-panel-heading"><h2>Recent games</h2><button id="dashboard-history" class="text-action" type="button">View history →</button></div><div id="dashboard-recent-games" class="recent-games"><p class="empty-state">No games played yet.</p></div></article></div>
+    <div class="rating-disclaimer">Rating is an estimated practice rating, starting at 1200 and updated from results against the AI. It is not an official FIDE rating.</div>
+  </main>
+</section>
+
+<!-- ONLINE MULTIPLAYER / FRIENDS -->
+<section id="online-screen" class="portal-screen" hidden>
+  <header class="portal-header"><button class="btn btn-secondary portal-back" data-go-home type="button">← Home</button><div class="portal-brand"><span>♞</span> Online Multiplayer</div><div class="portal-user"><span id="online-username"></span><button id="online-logout" class="btn btn-secondary" type="button">Log out</button></div></header>
+  <main class="portal-main online-main">
+    <div class="portal-intro"><p class="eyebrow">PLAY WITH FRIENDS</p><h1>Your chess community</h1><p>Add a friend using their exact username, send a challenge, and take turns in the same online match.</p></div>
+    <div class="online-top-grid">
+      <section class="portal-panel friend-add-panel"><div class="portal-panel-heading"><h2>Add a friend</h2><span>Username required</span></div>
+        <form id="friend-add-form" class="friend-add-form"><label for="friend-username">Player username</label><div class="friend-input-row"><input id="friend-username" name="username" maxlength="24" autocomplete="off" placeholder="Enter exact username" required><button id="friend-add-button" class="btn btn-primary" type="submit">Add friend</button></div><p id="friend-message" class="online-message" role="status"></p></form>
+      </section>
+      <section class="portal-panel online-help-panel"><h2>How online play works</h2><p>Add a username, challenge a friend, and wait for them to accept. White moves first. The board updates automatically when your opponent moves.</p><div class="online-live-indicator"><span></span> Live match updates</div></section>
+    </div>
+    <div class="online-bottom-grid">
+      <section class="portal-panel"><div class="portal-panel-heading"><h2>Friends</h2><button id="refresh-friends" class="text-action" type="button">Refresh</button></div><div id="friends-list" class="online-list"><p class="empty-state">Add a friend by username to get started.</p></div></section>
+      <section class="portal-panel"><div class="portal-panel-heading"><h2>Challenges & matches</h2><button id="refresh-matches" class="text-action" type="button">Refresh</button></div><div id="online-matches-list" class="online-list"><p class="empty-state">No pending challenges or active matches.</p></div></section>
+    </div>
+  </main>
+</section>
+
+<div class="app-container" id="practice-screen" hidden>
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="app-header">
+
+        <h1 id="game-header-title">Chess Analysis</h1>
+
+        <div class="header-controls practice-header-controls">
+            <button id="home-button" class="btn btn-secondary" type="button">← Home</button>
+            <button id="hint-button" class="btn btn-secondary" type="button">Hint</button>
+            <button id="save-game" class="btn btn-secondary" type="button">Save</button>
+            <button id="header-new-game" class="btn btn-primary" type="button">New Game</button>
+            <button id="resign-online" class="btn btn-secondary" type="button" hidden>Resign</button>
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="main-layout">
+
+        <!-- BOARD -->
+
+        <section class="board-section">
+
+            <div class="status-bar">
+
+                <div id="white-status"
+                     class="player-status active">
+                    White: To move
+                </div>
+
+                <div id="eval-badge"
+                     class="eval-badge">
+                    Eval:
+                    <span id="evaluation">0.0</span>
+                </div>
+
+                <div id="black-status"
+                     class="player-status">
+                    Black: Waiting
+                </div>
+
+            </div>
+
+
+            <!-- Board -->
+
+            <div class="board-wrapper">
+
+                <div id="board"
+                     class="chessboard"></div>
+
+                <svg id="arrow-canvas"></svg>
+
+            </div>
+
+
+            <!-- Board Controls -->
+
+            <div class="board-controls">
+
+                <button id="first"
+                        class="btn btn-icon"
+                        title="First Move">
+                    &laquo;
+                </button>
+
+                <button id="previous"
+                        class="btn btn-icon"
+                        title="Previous Move">
+                    &lsaquo;
+                </button>
+
+                <button id="next"
+                        class="btn btn-icon"
+                        title="Next Move">
+                    &rsaquo;
+                </button>
+
+                <button id="last"
+                        class="btn btn-icon"
+                        title="Last Move">
+                    &raquo;
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+        <aside class="sidebar-section">
+
+            <!-- Opening -->
+
+            <div class="panel-card">
+
+                <h3>Opening</h3>
+
+                <div id="opening-name"
+                     class="info-value">
+                    Starting Position
+                </div>
+
+            </div>
+
+
+            <!-- Engine Evaluation -->
+
+            <div class="panel-card">
+
+                <h3>Engine Evaluation</h3>
+
+                <div class="eval-grid">
+
+                    <div>
+                        <span>Best Move:</span>
+                        <strong id="best-move">--</strong>
+                    </div>
+
+                    <div>
+                        <span>Mate in:</span>
+                        <strong id="mate">None</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Captured Pieces -->
+
+            <div class="panel-card">
+
+                <h3>Captured Pieces</h3>
+
+                <div class="captures-container">
+
+                    <div class="capture-row">
+
+                        <span class="capture-label">
+                            White Captures:
+                        </span>
+
+                        <div id="white-captures"
+                             class="captures-box">
+                            None
+                        </div>
+
+                    </div>
+
+
+                    <div class="capture-row">
+
+                        <span class="capture-label">
+                            Black Captures:
+                        </span>
+
+                        <div id="black-captures"
+                             class="captures-box">
+                            None
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Move History -->
+
+            <div class="panel-card flex-expand">
+
+                <h3>Move History</h3>
+
+                <div id="move-history"
+                     class="move-history-list">
+                    No moves yet
+                </div>
+                <div id="game-status" class="game-status" role="status" aria-live="polite"></div>
+                <p id="hint-status" class="hint-status" role="status" aria-live="polite"></p>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     SETTINGS MODAL
+========================================================= -->
+
+<div id="options-overlay"
+     class="modal-overlay">
+
+    <div class="modal-content">
+
+        <h2>Board & Engine Settings</h2>
+
+        <div class="modal-body">
+
+            <div class="setting-group">
+
+                <label for="best-move-preference"
+                       class="setting-label">
+                    Show Best Move For:
+                </label>
+
+                <select id="best-move-preference"
+                        class="select-input full-width">
+
+                    <option value="both">
+                        Both Players (Current Turn)
+                    </option>
+
+                    <option value="w">
+                        White Only
+                    </option>
+
+                    <option value="b">
+                        Black Only
+                    </option>
+
+                    <option value="none">
+                        Disabled
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button id="flip"
+                    class="btn btn-primary full-width">
+                Flip Board Orientation
+            </button>
+
+
+            <button id="coordinates-option"
+                    class="btn btn-secondary full-width">
+                Toggle Coordinates
+            </button>
+
+        </div>
+
+        <button id="close-options"
+                class="btn btn-close">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     AI MODAL
+========================================================= -->
+
+<div id="ai-overlay"
+     class="modal-overlay">
+
+    <div class="modal-content">
+
+        <h2>AI Analysis Summary</h2>
+
+        <div class="modal-body">
+
+            <p>
+                <strong>Detected Opening:</strong>
+                <span id="ai-opening">--</span>
+            </p>
+
+            <p>
+                <strong>Opening Note:</strong>
+                <span id="opening-copy">--</span>
+            </p>
+
+            <p>
+                <strong>Recommended Continuation:</strong>
+                <span id="best-move-modal">--</span>
+                (
+                <span id="best-move-copy">--</span>
+                )
+            </p>
+
+        </div>
+
+        <button id="close-ai"
+                class="btn btn-close">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CHECKMATE MODAL
+========================================================= -->
+
+<div id="checkmate-overlay"
+     class="modal-overlay">
+
+    <div class="modal-content text-center">
+
+        <h2 id="winner-text">
+            Game Over
+        </h2>
+
+        <p id="winner-message">
+            Checkmate!
+        </p>
+
+        <div class="modal-actions">
+
+            <button id="new-game"
+                    class="btn btn-primary">
+                New Game
+            </button>
+
+           <button id="close-checkmate"
+        class="btn btn-secondary">
+    Review Game
+</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     GAME HISTORY MODAL
+========================================================= -->
+
+<div id="history-overlay"
+     class="modal-overlay">
+
+    <div class="modal-content history-modal">
+
+        <div class="history-header">
+
+            <h2>Saved Games</h2>
+
+            <button id="refresh-games"
+                    class="btn btn-secondary">
+                Refresh
+            </button>
+
+        </div>
+
+
+        <div id="saved-games-list"
+             class="saved-games-list">
+
+            <p class="history-loading">
+                Loading saved games...
+            </p>
+
+        </div>
+
+
+        <button id="close-history"
+                class="btn btn-close">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     GAME REPORT DASHBOARD
+========================================================= -->
+<div id="game-report-overlay" class="game-report-overlay" aria-hidden="true">
+    <section class="game-report-window" role="dialog" aria-modal="true" aria-labelledby="report-title">
+        <aside class="report-sidebar">
+            <div class="report-brand"><span class="report-brand-mark">♟</span><span>Chess Analysis</span></div>
+            <button class="report-nav active" data-report-section="overview"><span>▦</span> Overview</button>
+            <button class="report-nav" data-report-section="moves"><span>☷</span> Move Review</button>
+            <button class="report-nav" data-report-section="phases"><span>◷</span> Phase Accuracy</button>
+            <div class="report-sidebar-spacer"></div>
+            <button id="close-game-report" class="report-nav report-close"><span>←</span> Back to Board</button>
+        </aside>
+
+        <main class="report-main">
+            <header class="report-header">
+                <div>
+                    <p class="report-eyebrow">POST-GAME ANALYSIS</p>
+                    <h2 id="report-title">Game Report</h2>
+                    <p id="report-subtitle" class="report-subtitle">Player vs AI · Ready to analyze</p>
+                </div>
+                <div class="report-header-actions">
+                    <span id="report-status" class="report-status">Not analyzed</span>
+                    <button id="run-game-report" class="report-primary-button">Analyze game</button>
+                    <button id="close-game-report-top" class="report-icon-button" title="Close report" aria-label="Close report">×</button>
+                </div>
+            </header>
+
+            <div id="report-progress-wrap" class="report-progress-wrap" hidden>
+                <div class="report-progress-copy"><span id="report-progress-label">Analyzing positions…</span><span id="report-progress-value">0%</span></div>
+                <div class="report-progress-track"><div id="report-progress-bar" class="report-progress-bar"></div></div>
+            </div>
+            <div id="report-warning" class="report-warning" hidden></div>
+
+            <section id="report-section-overview" class="report-section active">
+                <div class="report-metric-grid">
+                    <article class="report-metric-card"><div class="report-card-label">Total moves</div><div id="report-total-moves" class="report-metric-value">—</div><div class="report-card-foot">Moves analyzed in this game</div><span class="report-card-icon">♟</span></article>
+                    <article class="report-metric-card"><div class="report-card-label">White accuracy</div><div id="report-white-accuracy" class="report-metric-value green-text">—</div><div class="report-card-foot">Engine-estimated accuracy</div><span class="report-card-icon">♔</span></article>
+                    <article class="report-metric-card"><div class="report-card-label">Black accuracy</div><div id="report-black-accuracy" class="report-metric-value">—</div><div class="report-card-foot">Engine-estimated accuracy</div><span class="report-card-icon">♚</span></article>
+                    <article class="report-metric-card"><div class="report-card-label">Engine coverage</div><div id="report-coverage" class="report-metric-value">—</div><div class="report-card-foot">Positions with evaluations</div><span class="report-card-icon">◎</span></article>
+                </div>
+
+                <div class="report-chart-grid">
+                    <article class="report-panel report-quality-panel">
+                        <div class="report-panel-heading"><div><h3>Move quality</h3><p>Classification of analyzed moves</p></div></div>
+                        <div class="report-donut-row"><div id="report-quality-donut" class="report-donut"><div class="report-donut-hole"><strong id="report-rated-count">0</strong><span>rated moves</span></div></div><div id="report-quality-legend" class="report-legend"><p class="report-empty-note">Run analysis to see move quality.</p></div></div>
+                    </article>
+                    <article class="report-panel">
+                        <div class="report-panel-heading"><div><h3>Accuracy by phase</h3><p>White and Black comparison</p></div></div>
+                        <div class="report-phase-chart" id="report-phase-chart">
+                            <p class="report-empty-note">Phase accuracy will appear after analysis.</p>
+                        </div>
+                    </article>
+                    <article class="report-panel report-trend-panel">
+                        <div class="report-panel-heading"><div><h3>Accuracy trend</h3><p>Estimated accuracy across the game</p></div></div>
+                        <div id="report-trend-chart" class="report-trend-chart"><p class="report-empty-note">Trend will appear after analysis.</p></div>
+                    </article>
+                    <article class="report-panel">
+                        <div class="report-panel-heading"><div><h3>Game summary</h3><p>Key details</p></div></div>
+                        <div class="report-summary-list">
+                            <div><span>Result</span><strong id="report-result">—</strong></div>
+                            <div><span>Opening</span><strong id="report-opening">Not identified</strong></div>
+                            <div><span>Best moves</span><strong id="report-best-total">0</strong></div>
+                            <div><span>Missed wins</span><strong id="report-missed-total">0</strong></div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="report-bottom-grid">
+                    <article class="report-panel">
+                        <div class="report-panel-heading"><div><h3>Move breakdown</h3><p>Counts for each side</p></div></div>
+                        <div class="report-table-scroll"><table class="report-breakdown-table"><thead><tr><th>Classification</th><th>White</th><th>Black</th><th>Total</th></tr></thead><tbody id="report-breakdown-body"><tr><td colspan="4" class="report-empty-cell">Analyze a game to populate this table.</td></tr></tbody></table></div>
+                    </article>
+                    <article class="report-panel report-coach-panel">
+                        <div class="report-panel-heading"><div><h3>AI coach insights</h3><p>Suggestions based on this report</p></div><span class="report-coach-icon">✦</span></div>
+                        <div id="report-coach-insights" class="report-coach-insights"><p class="report-empty-note">Your personalized takeaways will appear here.</p></div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="report-section-moves" class="report-section">
+                <article class="report-panel report-moves-panel">
+                    <div class="report-panel-heading"><div><h3>Move-by-move review</h3><p>Engine recommendation, move classification, and evaluation change</p></div><select id="report-move-filter" class="report-filter"><option value="all">All moves</option><option value="white">White</option><option value="black">Black</option><option value="errors">Errors only</option></select></div>
+                    <div class="report-table-scroll report-moves-scroll"><table class="report-moves-table"><thead><tr><th>#</th><th>Side</th><th>Played move</th><th>Classification</th><th>Best move</th><th>Eval change</th><th>Phase</th></tr></thead><tbody id="report-moves-body"><tr><td colspan="7" class="report-empty-cell">Run analysis to review the moves.</td></tr></tbody></table></div>
+                </article>
+            </section>
+
+            <section id="report-section-phases" class="report-section">
+                <div class="report-phase-cards" id="report-phase-cards"><article class="report-panel"><p class="report-empty-note">Analyze a game to see opening, middlegame, and endgame accuracy.</p></article></div>
+                <article class="report-panel"><div class="report-panel-heading"><div><h3>How phase accuracy is calculated</h3><p>Engine-estimated values</p></div></div><p class="report-explanation">The report evaluates positions with the Lichess Cloud Eval service when an evaluation is available. Accuracy is estimated from centipawn loss; it is not an official Chess.com rating. Positions without a cloud evaluation are marked unrated instead of being assigned invented scores.</p></article>
+            </section>
+            <footer class="report-footer">Analysis uses available engine evaluations. Missing evaluations are shown as unrated.</footer>
+        </main>
+    </section>
+</div>
+
+<!-- JavaScript -->
+<script src="js/script.js"></script>
+<script src="js/review.js"></script>
+<script src="js/account.js"></script>
+<script src="js/multiplayer.js"></script>
+</body>
+</html>
